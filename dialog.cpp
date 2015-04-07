@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QProcess>
+#include <QScrollBar>
 
 Dialog::Dialog(QWidget *parent) : QDialog(parent), ui(new Ui::Dialog)
 {
@@ -24,19 +25,31 @@ void Dialog::run(const QString &command)
 
   process = new QProcess();
   outputText = ui->outputText;
+
+  if(!outputText->document()->isEmpty()) {
+    outputText->insertPlainText(QString("\n"));
+  }
   outputText->insertPlainText("$ " + command + "\n");
 
   connect(process, &QProcess::readyReadStandardOutput, [process,outputText]() {
     outputText->insertPlainText(process->readAllStandardOutput());
+    QScrollBar *scrollbar = outputText->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
   });
 
   connect(process, &QProcess::readyReadStandardError, [process,outputText]() {
     outputText->insertPlainText(process->readAllStandardError());
+    QScrollBar *scrollbar = outputText->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
   });
 
   connect(process, static_cast<void (QProcess::*)(int)>(&QProcess::finished), [process, outputText](int) {
     outputText->insertPlainText(process->readAllStandardOutput());
     outputText->insertPlainText(process->readAllStandardError());
+
+    QScrollBar *scrollbar = outputText->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
+
     delete process;
   });
 
